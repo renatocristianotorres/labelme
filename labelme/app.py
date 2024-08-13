@@ -161,6 +161,10 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListWidget.setLayout(fileListLayout)
         self.file_dock.setWidget(fileListWidget)
 
+        self.ai_dock = QtWidgets.QDockWidget(self.tr("AI"), self)
+        self.ai_dock.setWidget(self.configure_ai_dock())
+        self.ai_dock.setObjectName("AI")
+
         self.zoomWidget = ZoomWidget()
         self.setAcceptDrops(True)
 
@@ -200,6 +204,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.ai_dock)
 
         # Actions
         action = functools.partial(utils.newAction, self)
@@ -367,13 +372,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr("Start drawing ai_polygon. Ctrl+LeftClick ends creation."),
             enabled=False,
         )
-        createAiPolygonMode.changed.connect(
-            lambda: self.canvas.initializeAiModel(
-                name=self._selectAiModelComboBox.currentText()
-            )
-            if self.canvas.createMode == "ai_polygon"
-            else None
-        )
+        createAiPolygonMode.changed.connect(self._initialize_ai_model_if_needed)
         createAiMaskMode = action(
             self.tr("Create AI-Mask"),
             lambda: self.toggleDrawMode(False, createMode="ai_mask"),
@@ -382,13 +381,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr("Start drawing ai_mask. Ctrl+LeftClick ends creation."),
             enabled=False,
         )
-        createAiMaskMode.changed.connect(
-            lambda: self.canvas.initializeAiModel(
-                name=self._selectAiModelComboBox.currentText()
-            )
-            if self.canvas.createMode == "ai_mask"
-            else None
-        )
+        createAiMaskMode.changed.connect(self._initialize_ai_model_if_needed)
         editMode = action(
             self.tr("Edit Polygons"),
             self.setEditMode,
@@ -784,41 +777,6 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
         )
 
-        selectAiModel = QtWidgets.QWidgetAction(self)
-        selectAiModel.setDefaultWidget(QtWidgets.QWidget())
-        selectAiModel.defaultWidget().setLayout(QtWidgets.QVBoxLayout())
-        #
-        selectAiModelLabel = QtWidgets.QLabel(self.tr("AI Mask Model"))
-        selectAiModelLabel.setAlignment(QtCore.Qt.AlignCenter)
-        selectAiModel.defaultWidget().layout().addWidget(selectAiModelLabel)
-        #
-        self._selectAiModelComboBox = QtWidgets.QComboBox()
-        selectAiModel.defaultWidget().layout().addWidget(self._selectAiModelComboBox)
-        model_names = [model.name for model in MODELS]
-        self._selectAiModelComboBox.addItems(model_names)
-        if self._config["ai"]["default"] in model_names:
-            model_index = model_names.index(self._config["ai"]["default"])
-        else:
-            logger.warning(
-                "Default AI model is not found: %r",
-                self._config["ai"]["default"],
-            )
-            model_index = 0
-        self._selectAiModelComboBox.setCurrentIndex(model_index)
-        self._selectAiModelComboBox.currentIndexChanged.connect(
-            lambda: self.canvas.initializeAiModel(
-                name=self._selectAiModelComboBox.currentText()
-            )
-            if self.canvas.createMode in ["ai_polygon", "ai_mask"]
-            else None
-        )
-
-        self._ai_prompt_widget: QtWidgets.QWidget = AiPromptWidget(
-            on_submit=self._submit_ai_prompt, parent=self
-        )
-        ai_prompt_action = QtWidgets.QWidgetAction(self)
-        ai_prompt_action.setDefaultWidget(self._ai_prompt_widget)
-
         self.tools = self.toolbar("Tools")
         self.toolbar_actions = (
             open_,
@@ -839,10 +797,6 @@ class MainWindow(QtWidgets.QMainWindow):
             brightnessContrast,
             fitWindow,
             zoom,
-            None,
-            selectAiModel,
-            None,
-            ai_prompt_action,
         )
 
         self.statusBar().showMessage(str(self.tr("%s started.")) % __appname__)
@@ -927,6 +881,42 @@ class MainWindow(QtWidgets.QMainWindow):
         dock_obj.setFeatures(features)
         if dock_config.get("show") is False:
             dock_obj.setVisible(False)
+
+    def configure_ai_dock(self) -> QtWidgets.QWidget:
+        select_ai_model_combo_box = QtWidgets.QComboBox(self)
+        model_names = [model.name for model in MODELS]
+        select_ai_model_combo_box.addItems(model_names)
+        default_ai_model = self._config["ai"]["default"]
+        if default_ai_model in model_names:
+            model_index = model_names.index(default_ai_model)
+        else:
+            logger.warning(
+                "Default AI model is not found: %r",
+                default_ai_model,
+            )
+            model_index = 0
+        select_ai_model_combo_box.setCurrentIndex(model_index)
+        select_ai_model_combo_box.currentIndexChanged.connect(
+            self._initialize_ai_model_if_needed,
+        )
+        self._selectAiModelComboBox = select_ai_model_combo_box
+        self._ai_prompt_widget: QtWidgets.QWidget = AiPromptWidget(
+            on_submit=self._submit_ai_prompt, parent=self
+        )
+
+        ai_dock_layout = QtWidgets.QVBoxLayout()
+        ai_dock_widget = QtWidgets.QWidget()
+        ai_dock_widget.setLayout(ai_dock_layout)
+        ai_dock_layout.addWidget(QtWidgets.QLabel(self.tr("AI Mask Model")))
+        ai_dock_layout.addWidget(select_ai_model_combo_box)
+        ai_dock_layout.addWidget(self._ai_prompt_widget)
+        return ai_dock_widget
+
+    def _initialize_ai_model_if_needed(self) -> None:
+        if self.canvas.createMode in ("ai_polygon", "ai_mask"):
+            self.canvas.initializeAiModel(
+                name=self._selectAiModelComboBox.currentText()
+            )
 
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
