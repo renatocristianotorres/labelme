@@ -89,7 +89,7 @@ class LabelListWidgetItem(QtGui.QStandardItem):
         return id(self)
 
     def __repr__(self):
-        return '{}("{}")'.format(self.__class__.__name__, self.text())
+        return f'{self.__class__.__name__}("{self.text()}")'
 
 
 class StandardItemModel(QtGui.QStandardItemModel):
@@ -171,7 +171,7 @@ class LabelListWidget(QtWidgets.QListView):
             item = self.model().item(row, 0)
             if item.shape() == shape:
                 return item
-        raise ValueError("cannot find shape: {}".format(shape))
+        raise ValueError(f"cannot find shape: {shape}")
 
     def clear(self):
         self.model().clear()

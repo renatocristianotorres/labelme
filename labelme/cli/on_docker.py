@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 
 import argparse
 import distutils.spawn
@@ -63,10 +62,10 @@ def labelme_on_docker(in_file, out_file):
     if out_file:
         out_file_a = osp.abspath(out_file)
         out_file_b = osp.join("/home/developer", osp.basename(out_file))
-        cmd += " -v {0}:{1}".format(out_file_a, out_file_b)
-    cmd += " wkentaro/labelme labelme {0}".format(in_file_b)
+        cmd += f" -v {out_file_a}:{out_file_b}"
+    cmd += f" wkentaro/labelme labelme {in_file_b}"
     if out_file:
-        cmd += " -O {0}".format(out_file_b)
+        cmd += f" -O {out_file_b}"
     subprocess.call(shlex.split(cmd))
 
     if out_file:
