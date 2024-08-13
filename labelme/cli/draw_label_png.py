@@ -41,17 +41,14 @@ def main():
 
     unique_label_values = np.unique(label)
 
-    logger.info(f"Label image shape: {label.shape}")
-    logger.info(f"Label values: {unique_label_values.tolist()}")
+    logger.info("Label image shape: %s", label.shape)
+    logger.info("Label values: %s", unique_label_values.tolist())
     if label_names is not None:
-        logger.info(
-            "Label names: {}".format(
-                [
-                    f"{label_value}:{label_names[label_value]}"
-                    for label_value in unique_label_values
-                ]
-            )
-        )
+        names = [
+            f"{label_value}:{label_names[label_value]}"
+            for label_value in unique_label_values
+        ]
+        logger.info("Label names: %s", names)
 
     if args.image:
         num_cols = 2

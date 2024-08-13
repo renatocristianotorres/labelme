@@ -23,7 +23,7 @@ class LabelQLineEdit(QtWidgets.QLineEdit):
         if e.key() in [QtCore.Qt.Key_Up, QtCore.Qt.Key_Down]:
             self.list_widget.keyPressEvent(e)
         else:
-            super(LabelQLineEdit, self).keyPressEvent(e)
+            super().keyPressEvent(e)
 
 
 class LabelDialog(QtWidgets.QDialog):
@@ -42,7 +42,7 @@ class LabelDialog(QtWidgets.QDialog):
             fit_to_content = {"row": False, "column": True}
         self._fit_to_content = fit_to_content
 
-        super(LabelDialog, self).__init__(parent)
+        super().__init__(parent)
         self.edit = LabelQLineEdit()
         self.edit.setPlaceholderText(text)
         self.edit.setValidator(labelme.utils.labelValidator())
@@ -230,7 +230,7 @@ class LabelDialog(QtWidgets.QDialog):
         items = self.labelList.findItems(text, QtCore.Qt.MatchFixedString)
         if items:
             if len(items) != 1:
-                logger.warning(f"Label list has duplicate '{text}'")
+                logger.warning("Label list has duplicate %r", text)
             self.labelList.setCurrentItem(items[0])
             row = self.labelList.row(items[0])
             self.edit.completer().setCurrentRow(row)

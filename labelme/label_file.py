@@ -48,7 +48,7 @@ class LabelFile:
         try:
             image_pil = PIL.Image.open(filename)
         except OSError:
-            logger.error(f"Failed opening image file: {filename}")
+            logger.error("Failed opening image file: %r", filename)
             return
 
         # apply orientation to image according to exif
