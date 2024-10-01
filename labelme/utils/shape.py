@@ -97,9 +97,7 @@ def masks_to_bboxes(masks):
     if masks.ndim != 3:
         raise ValueError(f"masks.ndim must be 3, but it is {masks.ndim}")
     if masks.dtype != bool:
-        raise ValueError(
-            f"masks.dtype must be bool type, but it is {masks.dtype}"
-        )
+        raise ValueError(f"masks.dtype must be bool type, but it is {masks.dtype}")
     bboxes = []
     for mask in masks:
         where = np.argwhere(mask)

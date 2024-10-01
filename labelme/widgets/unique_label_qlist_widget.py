@@ -1,4 +1,3 @@
-
 import html
 
 from qtpy import QtWidgets

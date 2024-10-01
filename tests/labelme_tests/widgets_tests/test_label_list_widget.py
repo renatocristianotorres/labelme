@@ -1,4 +1,3 @@
-
 import pytest
 
 from labelme.widgets import LabelListWidget
